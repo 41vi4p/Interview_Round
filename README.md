@@ -102,41 +102,44 @@ own `/api/*` routes.
 
 ### Prerequisites
 
-- [Bun](https://bun.sh)
-- Python 3.13+ and [`uv`](https://docs.astral.sh/uv/)
-- Docker (for Redis)
+- Docker + Docker Compose
 - An [ExchangeRate-API](https://www.exchangerate-api.com) key (free tier works)
 - A [Firebase](https://console.firebase.google.com) project with Email/Password
   and Google sign-in enabled, plus a service account JSON
+- For native development instead of Docker: [Bun](https://bun.sh) and
+  Python 3.13+ with [`uv`](https://docs.astral.sh/uv/)
 
-### 1. Start Redis
+### Run it — Docker Compose (recommended)
 
 ```bash
-docker compose up -d
+cp .env.example .env                     # NEXT_PUBLIC_FIREBASE_* — build args for the frontend image
+cp backend/.env.example backend/.env     # fill in EXCHANGERATE_API_KEY
+# drop backend/firebase-service-account.json in place (gitignored)
+
+docker compose up -d --build
 ```
 
-### 2. Backend
+- App: [http://localhost:3000](http://localhost:3000)
+- Swagger UI: [http://localhost:8000/docs](http://localhost:8000/docs)
+
+All three services (Redis, FastAPI, Next.js) run as containers. SQLite
+persists on the host via a bind mount, Redis via a named volume.
+
+### Run it — native, two terminals (hot reload)
 
 ```bash
-cd backend
-uv venv && uv pip install -r requirements.txt
-cp .env.example .env   # fill in EXCHANGERATE_API_KEY and FIREBASE_SERVICE_ACCOUNT_PATH
-source .venv/bin/activate
+docker compose up -d redis
+
+# Terminal A
+cd backend && uv venv && uv pip install -r requirements.txt
+cp .env.example .env && source .venv/bin/activate
 uvicorn app.main:app --reload --port 8000
-```
 
-Swagger UI: [http://localhost:8000/docs](http://localhost:8000/docs)
-
-### 3. Frontend
-
-```bash
-cd frontend
-bun install
-cp .env.local.example .env.local   # fill in NEXT_PUBLIC_FIREBASE_* config
+# Terminal B
+cd frontend && bun install
+cp .env.local.example .env.local
 bun dev
 ```
-
-App: [http://localhost:3000](http://localhost:3000)
 
 Full setup detail, every environment variable, and the SQLite schema are in
 [`docs/implementation.md`](docs/implementation.md).
@@ -162,17 +165,19 @@ fallback chain are documented in
 ```
 .
 ├── backend/                Python FastAPI service
+│   ├── Dockerfile
 │   └── app/
 │       ├── routers/        currencies · convert · trend · budget · favorites · history
 │       ├── services/       exchange_rate_client · redis_cache · rates (fallback chain)
 │       ├── auth.py         Firebase ID token verification
 │       └── db.py           SQLite schema + queries
 ├── frontend/                Next.js app
+│   ├── Dockerfile
 │   ├── app/                 converter · budget · history · login
 │   ├── components/          UI components
 │   ├── context/              AuthContext (Firebase)
 │   └── lib/                  api client, types, fixtures
-├── docker-compose.yml        Redis
+├── docker-compose.yml        redis + backend + frontend
 ├── docs/
 │   ├── implementation.md     API contract & architecture (source of truth)
 │   └── CHANGELOG.md

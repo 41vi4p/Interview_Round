@@ -6,7 +6,7 @@ export const metadata = {
 
 export default function LoginPage() {
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-1 flex-col items-center justify-center gap-8 py-10">
       <div className="text-center">
         <p className="font-mono text-xs uppercase tracking-[0.2em] text-amber">Boarding pass</p>
         <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight text-ink">

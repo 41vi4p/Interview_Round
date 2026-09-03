@@ -6,14 +6,15 @@ This document is the single source of truth for building the backend and fronten
 
 ```
 interview_round/
-├── docker-compose.yml   # Redis only (infra) — `docker compose up -d`
+├── docker-compose.yml   # redis + backend + frontend — `docker compose up -d`
 ├── docs/implementation.md
-├── backend/             # Terminal A — Python FastAPI, port 8000
-└── frontend/            # Terminal B — Next.js 16 App Router, port 3000, bun
+├── backend/             # Python FastAPI, port 8000
+└── frontend/            # Next.js 16 App Router, port 3000, bun
 ```
 
 - **Backend**: Python FastAPI (not Next.js API routes). Owns all calls to ExchangeRate-API, SQLite, Redis, and Firebase Admin token verification. The ExchangeRate API key and Firebase service-account credentials live **only** in `backend/.env` / a gitignored service-account file — never sent to or readable by the frontend.
-- **Frontend**: Next.js App Router + Tailwind v4 (already scaffolded) + Firebase client SDK for auth. Talks to the backend **only** via same-origin `/api/*`, proxied by a `next.config.ts` rewrite to `http://127.0.0.1:8000/api/*`. No CORS needed in the browser; FastAPI still allows `http://localhost:3000` via CORS middleware for direct testing (Swagger UI, curl).
+- **Frontend**: Next.js App Router + Tailwind v4 (already scaffolded) + Firebase client SDK for auth. Talks to the backend **only** via same-origin `/api/*`, proxied by a `next.config.ts` rewrite to the backend. No CORS needed in the browser; FastAPI still allows `http://localhost:3000` via CORS middleware for direct testing (Swagger UI, curl).
+- **Containerized**: all three services (`redis`, `backend`, `frontend`) run via `docker compose up -d`. The frontend's rewrite destination is baked in at **build time** (Next.js evaluates `rewrites()` into the routes manifest during `next build`, not at server start), so `BACKEND_URL` is passed as a Docker **build arg** (`http://backend:8000`, the compose service name), not a runtime env var — see `frontend/Dockerfile`. For native (non-Docker) development, the `next.config.ts` default of `http://127.0.0.1:8000` is used instead.
 - **Data flow**: Rate lookups go through a fallback chain — Redis (fast path) → SQLite `rate_snapshots` (durable, last-known-good) → ExchangeRate-API (source of truth) — with write-back into both Redis and SQLite. See "Rate Lookup Fallback Chain" below. This also produces the 30-day trend data as a side effect (one snapshot row per pair per UTC day).
 - **Auth**: Firebase Auth (Email/Password + Google) on the frontend. The frontend attaches `Authorization: Bearer <Firebase ID token>` to requests; the backend verifies it server-side via `firebase-admin` and scopes favorites/history to that UID. Currency conversion, trend, and budget endpoints are public (no login required to just convert money).
 
@@ -157,15 +158,32 @@ NEXT_PUBLIC_FIREBASE_APP_ID=
 
 ## Running Everything
 
+### Option A — Docker Compose (all three services)
+
 ```bash
-# One-time infra
-docker compose up -d          # starts Redis on localhost:6379
+cp .env.example .env                       # NEXT_PUBLIC_FIREBASE_* — build args for the frontend image
+cp backend/.env.example backend/.env       # fill in EXCHANGERATE_API_KEY
+# drop backend/firebase-service-account.json in place (gitignored)
+
+docker compose up -d --build
+# frontend: http://localhost:3000
+# backend:  http://localhost:8000/docs
+```
+
+SQLite data persists on the host via a bind mount (`backend/data/`); Redis
+persists via a named volume. Rebuild after changing frontend `NEXT_PUBLIC_*`
+values or backend source: `docker compose up -d --build`.
+
+### Option B — native, two terminals (faster iteration / hot reload)
+
+```bash
+docker compose up -d redis    # just Redis
 
 # Terminal A — backend
 cd backend
-python -m venv venv && source venv/bin/activate
-pip install -r requirements.txt
+uv venv && uv pip install -r requirements.txt
 cp .env.example .env          # fill in EXCHANGERATE_API_KEY + firebase-service-account.json path
+source .venv/bin/activate
 uvicorn app.main:app --reload --port 8000
 # Swagger UI at http://localhost:8000/docs
 

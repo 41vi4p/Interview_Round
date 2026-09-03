@@ -15,16 +15,21 @@ _firebase_ready = False
 
 def init_firebase() -> None:
     global _firebase_ready
-    if not os.path.exists(FIREBASE_SERVICE_ACCOUNT_PATH):
+    # os.path.isfile (not exists): a Docker bind mount of a not-yet-created
+    # host file creates an empty directory at this path, which exists() would
+    # accept and Certificate() would then fail to parse.
+    try:
+        if not os.path.isfile(FIREBASE_SERVICE_ACCOUNT_PATH):
+            raise FileNotFoundError(FIREBASE_SERVICE_ACCOUNT_PATH)
+        cred = credentials.Certificate(FIREBASE_SERVICE_ACCOUNT_PATH)
+        firebase_admin.initialize_app(cred)
+        _firebase_ready = True
+    except Exception:
         logger.warning(
-            "Firebase service account not found at %s — auth-protected endpoints "
-            "will reject all requests until it is configured.",
+            "Firebase not configured at %s — auth-protected endpoints will "
+            "reject all requests until it is configured.",
             FIREBASE_SERVICE_ACCOUNT_PATH,
         )
-        return
-    cred = credentials.Certificate(FIREBASE_SERVICE_ACCOUNT_PATH)
-    firebase_admin.initialize_app(cred)
-    _firebase_ready = True
 
 
 def _verify(authorization: str | None) -> str | None:

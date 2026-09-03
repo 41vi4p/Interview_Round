@@ -37,15 +37,15 @@ export function BudgetBoard() {
   return (
     <div className="flex flex-col gap-6">
       <div className="board-panel rounded-lg p-6">
-        <div className="grid gap-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
-          <label className="flex flex-col gap-1.5">
+        <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end">
+          <label className="flex min-w-0 flex-col gap-1.5">
             <span className="font-display text-[11px] font-medium uppercase tracking-[0.14em] text-ink-dim">
               Home currency
             </span>
             <select
               value={base}
               onChange={(e) => setBase(e.target.value)}
-              className="min-h-11 cursor-pointer rounded-md border border-hairline bg-panel-raised px-3 py-2 font-mono text-lg text-ink outline-none focus-visible:ring-2 focus-visible:ring-amber-bright"
+              className="min-h-11 w-full min-w-0 cursor-pointer rounded-md border border-hairline bg-panel-raised px-3 py-2 font-mono text-lg text-ink outline-none focus-visible:ring-2 focus-visible:ring-amber-bright"
             >
               {COMMON_BASES.map((c) => (
                 <option key={c} value={c}>
@@ -54,7 +54,7 @@ export function BudgetBoard() {
               ))}
             </select>
           </label>
-          <label className="flex flex-col gap-1.5">
+          <label className="flex min-w-0 flex-col gap-1.5">
             <span className="font-display text-[11px] font-medium uppercase tracking-[0.14em] text-ink-dim">
               Travel budget
             </span>
@@ -62,7 +62,7 @@ export function BudgetBoard() {
               inputMode="decimal"
               value={amountInput}
               onChange={(e) => setAmountInput(e.target.value.replace(/[^0-9.]/g, ""))}
-              className="min-h-11 rounded-md border border-hairline bg-panel-raised px-3 py-2 font-mono text-lg tabular text-ink outline-none focus-visible:ring-2 focus-visible:ring-amber-bright"
+              className="min-h-11 w-full min-w-0 rounded-md border border-hairline bg-panel-raised px-3 py-2 font-mono text-lg tabular text-ink outline-none focus-visible:ring-2 focus-visible:ring-amber-bright"
             />
           </label>
           <div className="pb-2.5">{!loading && results.length > 0 && <SourceChip source={source} />}</div>

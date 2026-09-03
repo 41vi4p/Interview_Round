@@ -29,8 +29,26 @@ changing any endpoint or adding a new one, and keep it in sync with the code.
 
 ## Running everything
 
+**Docker Compose (all three services)**:
+
 ```bash
-docker compose up -d                                   # Redis
+cp .env.example .env                     # NEXT_PUBLIC_FIREBASE_* — frontend build args
+cp backend/.env.example backend/.env     # EXCHANGERATE_API_KEY
+# drop backend/firebase-service-account.json in place
+
+docker compose up -d --build
+```
+
+`BACKEND_URL` for the frontend's rewrite proxy is a Docker **build arg**
+(`http://backend:8000`, set in `docker-compose.yml`), not a runtime env var —
+Next.js bakes `rewrites()` into the routes manifest at `next build` time, so
+setting it only at container start has no effect. Rebuild
+(`docker compose up -d --build`) after backend/frontend source changes.
+
+**Native, two terminals** (faster iteration):
+
+```bash
+docker compose up -d redis
 
 cd backend && source .venv/bin/activate                # uv-managed venv
 uvicorn app.main:app --reload --port 8000               # Swagger UI: /docs

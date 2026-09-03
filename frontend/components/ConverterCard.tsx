@@ -77,7 +77,7 @@ export function ConverterCard({
 
   return (
     <div className="board-panel rounded-lg p-6">
-      <div className="grid grid-cols-[1fr_auto_1fr] items-end gap-3">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-end gap-3">
         <CurrencySelect id="base" label="From" value={base} onChange={onBaseChange} currencies={currencies} />
         <button
           onClick={swap}
