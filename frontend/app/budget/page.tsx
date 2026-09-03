@@ -15,8 +15,8 @@ export default function BudgetPage() {
           One budget, five destinations.
         </h1>
         <p className="mt-2 max-w-xl font-mono text-sm text-ink-dim">
-          Set your home currency and travel budget — see it converted across
-          USD, EUR, GBP, JPY and AUD at once.
+          Set your home currency and travel budget, then pick which
+          destinations to compare it against — up to 8 at once.
         </p>
       </div>
       <BudgetBoard />

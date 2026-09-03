@@ -8,16 +8,28 @@ router = APIRouter()
 
 MAJOR_CURRENCIES = ["USD", "EUR", "GBP", "JPY", "AUD"]
 FALLBACK_CURRENCY = "CAD"
+MAX_TARGETS = 8
 
 
 @router.post("/budget", response_model=BudgetResponse)
 def budget(payload: BudgetRequest) -> BudgetResponse:
     base = payload.base.upper()
 
-    targets = [c for c in MAJOR_CURRENCIES if c != base]
-    if len(targets) < 5:
-        targets.append(FALLBACK_CURRENCY)
-    targets = targets[:5]
+    if payload.targets:
+        seen: set[str] = set()
+        targets: list[str] = []
+        for code in payload.targets:
+            code = code.upper()
+            if code == base or code in seen:
+                continue
+            seen.add(code)
+            targets.append(code)
+        targets = targets[:MAX_TARGETS]
+    else:
+        targets = [c for c in MAJOR_CURRENCIES if c != base]
+        if len(targets) < 5:
+            targets.append(FALLBACK_CURRENCY)
+        targets = targets[:5]
 
     try:
         rate_by_target = rates.get_multi_rates(base, targets)

@@ -171,3 +171,16 @@ def list_last_30_snapshots(base: str, target: str) -> list[sqlite3.Row]:
         (base, target),
     ).fetchall()
     return list(reversed(rows))
+
+
+def list_todays_snapshots(limit: int = 40) -> list[sqlite3.Row]:
+    conn = get_connection()
+    return conn.execute(
+        """
+        SELECT base_currency, target_currency, rate FROM rate_snapshots
+        WHERE snapshot_date = ?
+        ORDER BY base_currency, target_currency
+        LIMIT ?
+        """,
+        (_today(), limit),
+    ).fetchall()

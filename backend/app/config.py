@@ -15,3 +15,5 @@ CORS_ORIGINS = [
     for origin in os.environ.get("CORS_ORIGINS", "http://localhost:3000").split(",")
     if origin.strip()
 ]
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash-lite")

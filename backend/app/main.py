@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.auth import init_firebase
 from app.config import CORS_ORIGINS
 from app.db import init_schema
-from app.routers import budget, convert, currencies, favorites, history, trend
+from app.routers import budget, chat, convert, currencies, favorites, history, trend
 
 
 @asynccontextmanager
@@ -32,6 +32,7 @@ app.include_router(trend.router, prefix="/api")
 app.include_router(favorites.router, prefix="/api")
 app.include_router(history.router, prefix="/api")
 app.include_router(budget.router, prefix="/api")
+app.include_router(chat.router, prefix="/api")
 
 
 @app.get("/health")

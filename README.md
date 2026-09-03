@@ -13,7 +13,7 @@ most one external API call per currency pair per day.
 [![SQLite](https://img.shields.io/badge/SQLite-durable%20store-003B57?logo=sqlite&logoColor=white)](https://sqlite.org)
 [![Firebase Auth](https://img.shields.io/badge/Firebase-Auth-FFCA28?logo=firebase&logoColor=black)](https://firebase.google.com/docs/auth)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
-[![Version](https://img.shields.io/badge/version-0.6.0-informational)](docs/CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.9.0-informational)](docs/CHANGELOG.md)
 
 ---
 

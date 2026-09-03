@@ -50,3 +50,15 @@ export type BudgetResult = {
   amount: number;
   results: BudgetLine[];
 };
+
+export type ChatRole = "user" | "model";
+
+export type ChatMessage = {
+  role: ChatRole;
+  text: string;
+};
+
+export type ChatResult = {
+  reply: string;
+  context_date: string;
+};

@@ -6,6 +6,8 @@ import {
 } from "./fixtures";
 import type {
   BudgetResult,
+  ChatMessage,
+  ChatResult,
   ConvertResult,
   Currency,
   Favorite,
@@ -100,19 +102,20 @@ export async function getTrend(
 
 export async function getBudget(
   base: string,
-  amount: number
+  amount: number,
+  targets?: string[]
 ): Promise<BudgetResult & { fromFixture: boolean }> {
   try {
     const res = await fetch("/api/budget", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ base, amount }),
+      body: JSON.stringify({ base, amount, targets }),
     });
     if (!res.ok) return await parseError(res);
     const data = await res.json();
     return { ...data, fromFixture: false };
   } catch {
-    return { base, amount, results: fixtureBudget(base, amount), fromFixture: true };
+    return { base, amount, results: fixtureBudget(base, amount, targets), fromFixture: true };
   }
 }
 
@@ -222,4 +225,18 @@ export async function getHistory(
 export function recordLocalHistory(uid: string, entry: HistoryEntry) {
   const existing = readLocal<HistoryEntry>(uid, "history");
   writeLocal(uid, "history", [entry, ...existing].slice(0, 100));
+}
+
+export async function sendChatMessage(
+  token: string,
+  message: string,
+  history: ChatMessage[]
+): Promise<ChatResult> {
+  const res = await fetch("/api/chat", {
+    method: "POST",
+    headers: { ...(await authHeaders(token)), "Content-Type": "application/json" },
+    body: JSON.stringify({ message, history }),
+  });
+  if (!res.ok) return await parseError(res);
+  return await res.json();
 }

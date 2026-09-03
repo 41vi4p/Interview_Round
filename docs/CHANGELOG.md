@@ -4,6 +4,55 @@ All notable changes to this project are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows
 [Semantic Versioning](https://semver.org/) via the root `VERSION` file.
 
+## [0.9.0] - 2026-09-03
+
+### Added
+- Travel Budgeting now lets you choose which destination currencies to
+  compare against, not just the home currency — add/remove/change up to 8
+  targets via `CurrencySelect` dropdowns in `BudgetBoard.tsx`. Defaults to
+  the previous fixed 5-currency set so the initial view is unchanged.
+- `POST /api/budget` accepts an optional `targets: string[]` field
+  (`BudgetRequest` in `backend/app/models.py`) — uppercased, deduped, `base`
+  excluded, capped at 8. Omitted/empty `targets` keeps the exact previous
+  default behavior (backward compatible). `getBudget()`/`fixtureBudget()` on
+  the frontend updated to match.
+
+## [0.8.0] - 2026-09-03
+
+### Fixed
+- `CurrencySelect` (and `BudgetBoard`'s home-currency select) was missing
+  `w-full`/`min-w-0`, so its `<select>` sized to its longest option text
+  ("USD — United States Dollar") inside a CSS Grid `1fr` track, which
+  defaults to `min-width: auto` — the select overflowed its track and pushed
+  the swap button and the "To" currency selector off-screen. Added
+  `min-w-0`/`w-full`/`truncate` to the selects and their label wrappers, and
+  `minmax(0,1fr)` to the grid tracks in `ConverterCard` and `BudgetBoard`.
+- `/login` page content was top-anchored in the page's full-height `<main>`,
+  leaving a large empty area below the sign-in card. The page now centers
+  its content vertically (`flex-1 items-center justify-center`).
+
+## [0.7.0] - 2026-09-03
+
+### Added
+- `backend/Dockerfile` (python:3.13-slim + `uv`) and `frontend/Dockerfile`
+  (multi-stage `bun` build, Next.js `output: "standalone"`).
+- `docker-compose.yml` now runs all three services (`redis`, `backend`,
+  `frontend`), not just Redis. SQLite persists via a host bind mount,
+  Redis via a named volume.
+- Root `.env.example` for the frontend's `NEXT_PUBLIC_FIREBASE_*` Docker
+  build args (distinct from `frontend/.env.local`, used for native `bun dev`).
+
+### Fixed
+- `app/auth.py`: Firebase init now checks `os.path.isfile` (not `exists`)
+  and wraps credential loading in try/except — a Docker bind mount of a
+  not-yet-created host file creates an empty *directory* at that path, which
+  `exists()` would accept and then crash startup trying to parse it as JSON.
+- Frontend `next.config.ts` `rewrites()` is evaluated once at `next build`
+  time into the routes manifest, not re-read at container start, so
+  `BACKEND_URL` had to move from a runtime `environment:` value to a Docker
+  **build arg** (`http://backend:8000`) — otherwise the standalone server
+  kept proxying to the build-time default and every `/api/*` call 500'd.
+
 ## [0.6.0] - 2026-09-03
 
 ### Added

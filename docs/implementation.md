@@ -76,7 +76,7 @@ Up to the last 30 daily snapshots for that pair, ascending by date. Triggers a s
 Only the caller's own rows, most recent first.
 
 ### 6. `POST /api/budget` (public) — Travel Budgeting mode
-Request: `{ "base": "USD", "amount": 1000 }`
+Request: `{ "base": "USD", "amount": 1000, "targets": ["EUR", "GBP", "JPY", "AUD", "CAD"] }` — `targets` is optional.
 ```json
 {
   "base": "USD",
@@ -90,8 +90,19 @@ Request: `{ "base": "USD", "amount": 1000 }`
   ]
 }
 ```
-Always exactly 5 entries from the fixed set `USD, EUR, GBP, JPY, AUD` — if `base` is itself in that set, swap it out for `CAD` so there are always 5 distinct target currencies.
+- **`targets` omitted/empty** (default): the fixed set `USD, EUR, GBP, JPY, AUD` — if `base` is itself in that set, swap it out for `CAD` — so there are always exactly 5 distinct target currencies. This is the original, backward-compatible behavior.
+- **`targets` provided**: used instead of the default set. Each code is uppercased and deduped, `base` itself is excluded if present, and the list is capped at **8** (anything beyond that is silently truncated, not an error). `results` has exactly as many entries as the resolved target list — no longer hardcoded to 5.
 
+### 7. `POST /api/chat` (auth required) — "Ask the Desk" assistant
+
+Request: `{ "message": "how much is 100 usd in inr", "history": [{ "role": "user", "text": "..." }, { "role": "model", "text": "..." }] }`
+`history` is optional (omit/empty on the first turn) and is exactly the running transcript the frontend already has in state — the backend is stateless per request, nothing is persisted server-side.
+
+```json
+{ "reply": "100 USD is about 8,633 INR at today's rate (1 USD = 86.33 INR).", "context_date": "2026-09-03" }
+```
+
+The backend builds a Gemini `systemInstruction` from the **freshest rate data it already has** (today's UTC `rate_snapshots`, via the same fallback chain as `/api/convert` — no extra ExchangeRate-API calls are forced just to open a chat) plus the caller's own favorite pairs (fetched the same way), so the assistant always answers from live, dated context rather than the model's own training knowledge. If Gemini is unreachable or misconfigured, respond `502 { "detail": "chat unavailable" }` rather than a generic 500.
 ## SQLite Schema
 
 ```sql
@@ -145,7 +156,20 @@ DB_PATH=./data/app.db
 REDIS_URL=redis://localhost:6379/0
 FIREBASE_SERVICE_ACCOUNT_PATH=./firebase-service-account.json
 CORS_ORIGINS=http://localhost:3000
+GEMINI_API_KEY=
+GEMINI_MODEL=gemini-3.5-flash-lite
 ```
+
+`GEMINI_MODEL` defaults to `gemini-3.5-flash-lite`. `gemini-2.5-flash` (the
+free-tier choice verified against docs at design time) turned out to be
+deprecated for new users when actually called — the live error pointed to
+`gemini-3.6-flash`, which worked but took 30-47s per reply (it does internal
+"thinking" that eats the output-token budget, and `thinkingConfig.thinkingBudget: 0`
+to disable it is rejected as invalid for this model). Queried `GET
+/v1beta/models` with the real key to get ground truth on what's actually
+available, and `gemini-3.5-flash-lite` — the low-latency tier, exactly the
+right fit for short conversational replies — answers correctly in ~1s. It's
+read at request time, no rebuild needed if you want to change it.
 
 **`frontend/.env.local`** (see `frontend/.env.local.example`):
 ```

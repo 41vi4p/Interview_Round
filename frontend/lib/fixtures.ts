@@ -99,11 +99,25 @@ export function fixtureTrend(base: string, target: string): TrendPoint[] {
 }
 
 const BUDGET_SET = ["USD", "EUR", "GBP", "JPY", "AUD"];
+const BUDGET_MAX_TARGETS = 8;
 
-export function fixtureBudget(base: string, amount: number): BudgetLine[] {
-  const targets = BUDGET_SET.includes(base)
-    ? [...BUDGET_SET.filter((c) => c !== base), "CAD"]
-    : BUDGET_SET;
+export function fixtureBudget(base: string, amount: number, customTargets?: string[]): BudgetLine[] {
+  let targets: string[];
+  if (customTargets && customTargets.length > 0) {
+    const seen = new Set<string>();
+    targets = [];
+    for (const raw of customTargets) {
+      const code = raw.toUpperCase();
+      if (code === base || seen.has(code)) continue;
+      seen.add(code);
+      targets.push(code);
+    }
+    targets = targets.slice(0, BUDGET_MAX_TARGETS);
+  } else {
+    targets = BUDGET_SET.includes(base)
+      ? [...BUDGET_SET.filter((c) => c !== base), "CAD"]
+      : BUDGET_SET;
+  }
   return targets.map((currency) => {
     const rate = fixtureRate(base, currency);
     return { currency, rate: Number(rate.toFixed(6)), converted: Number((rate * amount).toFixed(2)) };

@@ -64,6 +64,7 @@ class HistoryResponse(BaseModel):
 class BudgetRequest(BaseModel):
     base: str
     amount: float
+    targets: list[str] | None = None
 
 
 class BudgetResult(BaseModel):
@@ -76,3 +77,18 @@ class BudgetResponse(BaseModel):
     base: str
     amount: float
     results: list[BudgetResult]
+
+
+class ChatMessage(BaseModel):
+    role: Literal["user", "model"]
+    text: str
+
+
+class ChatRequest(BaseModel):
+    message: str
+    history: list[ChatMessage] = []
+
+
+class ChatResponse(BaseModel):
+    reply: str
+    context_date: str
