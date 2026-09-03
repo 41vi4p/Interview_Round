@@ -1,0 +1,118 @@
+@import "tailwindcss";
+
+:root {
+  --board-bg: #f4f2ec;
+  --panel: #ffffff;
+  --panel-raised: #ebe8df;
+  --hairline: rgba(20, 23, 28, 0.12);
+  --ink: #14171c;
+  --ink-dim: #5b6472;
+  --amber: #b3720d;
+  --amber-bright: #f0a93a;
+  --teal: #147a5f;
+  --teal-bright: #4fd1a5;
+  --coral: #c23a2c;
+  --shadow-color: 220 20% 20%;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --board-bg: #14171c;
+    --panel: #1b1f26;
+    --panel-raised: #232830;
+    --hairline: rgba(236, 232, 222, 0.1);
+    --ink: #ece8de;
+    --ink-dim: #9aa1ae;
+    --amber: #f0a93a;
+    --amber-bright: #f0a93a;
+    --teal: #4fd1a5;
+    --teal-bright: #4fd1a5;
+    --coral: #ef6b5b;
+  }
+}
+
+@theme inline {
+  --color-board: var(--board-bg);
+  --color-panel: var(--panel);
+  --color-panel-raised: var(--panel-raised);
+  --color-hairline: var(--hairline);
+  --color-ink: var(--ink);
+  --color-ink-dim: var(--ink-dim);
+  --color-amber: var(--amber);
+  --color-amber-bright: var(--amber-bright);
+  --color-teal: var(--teal);
+  --color-teal-bright: var(--teal-bright);
+  --color-coral: var(--coral);
+  --font-display: var(--font-space-grotesk);
+  --font-mono: var(--font-plex-mono);
+  --font-body: var(--font-plex-sans);
+}
+
+* {
+  border-color: var(--hairline);
+}
+
+html {
+  color-scheme: light dark;
+}
+
+body {
+  background: var(--board-bg);
+  color: var(--ink);
+  font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  background-image:
+    linear-gradient(var(--hairline) 1px, transparent 1px),
+    linear-gradient(90deg, var(--hairline) 1px, transparent 1px);
+  background-size: 32px 32px;
+  background-position: -1px -1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* Split-flap signature: each character flips like a departures-board tile. */
+.flap-char {
+  display: inline-block;
+  position: relative;
+}
+
+.flap-char.is-flipping {
+  animation: flap-flip 0.32s cubic-bezier(0.45, 0, 0.55, 1);
+}
+
+@keyframes flap-flip {
+  0% {
+    transform: rotateX(0deg);
+    opacity: 1;
+  }
+  45% {
+    transform: rotateX(-90deg);
+    opacity: 0.4;
+  }
+  55% {
+    transform: rotateX(90deg);
+    opacity: 0.4;
+  }
+  100% {
+    transform: rotateX(0deg);
+    opacity: 1;
+  }
+}
+
+.board-panel {
+  background: var(--panel);
+  border: 1px solid var(--hairline);
+  box-shadow: 0 1px 0 0 var(--hairline) inset, 0 12px 24px -18px rgba(0, 0, 0, 0.35);
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
